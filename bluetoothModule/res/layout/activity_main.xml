@@ -4,5 +4,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.example.bluetoothmodule.MainActivity"
-    tools:ignore="MergeRootFrame" />
+    tools:ignore="MergeRootFrame" >
+    
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        
+	    <LinearLayout
+	        android:id="@+id/linearLayout2"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content"
+	        android:orientation="horizontal" >
+
+	        <Button
+	            android:id="@+id/btn_select"
+	            android:layout_width="match_parent"
+	            android:layout_height="wrap_content"
+	            android:padding="12sp"
+	            android:onClick="onSelectClicked"
+	            android:text="@string/btn_select_string" />
+	    </LinearLayout>
+	</LinearLayout> 
+	    
+</FrameLayout>
+    
+
+	    
 
