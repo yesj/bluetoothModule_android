@@ -33,9 +33,9 @@ import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-//import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
+
 
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
@@ -48,11 +48,6 @@ public class TreadmillService extends Service {
     private BluetoothAdapter mBluetoothAdapter;
     private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
-    //private int mConnectionState = STATE_DISCONNECTED;
-
-    //private static final int STATE_DISCONNECTED = 0;
-    //private static final int STATE_CONNECTING = 1;
-    //private static final int STATE_CONNECTED = 2;
 
     public final static String ACTION_GATT_CONNECTED =
     		"com.example.bluetoothmodule.ACTION_GATT_CONNECTED";
@@ -66,13 +61,24 @@ public class TreadmillService extends Service {
             "com.example.bluetoothmodule.EXTRA_DATA";
     public final static String DEVICE_DOES_NOT_SUPPORT_UART =
             "com.example.bluetoothmodule.DEVICE_DOES_NOT_SUPPORT_UART";
-    public final static String ACTION_GATT_SERVICES_HEART_RATE_DISCOVERED =
-            "com.example.bluetoothmodule.ACTION_GATT_SERVICES_HEART_RATE_DISCOVERED";
-    public final static String ACTION_SERIVCES_HEART_RATE =
-            "com.example.bluetoothmodule.ACTION_SERIVCES_HEART_RATE";
+    public final static String DISPLAY_STATE_CHARACTERISTIC_DATA =
+            "com.example.bluetoothmodule.DISPLAY_STATE_CHARACTERISTIC_DATA";
+    public final static String UNIT_CHARACTERISTIC_DATA =
+            "com.example.bluetoothmodule.UNIT_CHARACTERISTIC_DATA";
+    public final static String SPEED_CHARACTERISTIC_DATA =
+            "com.example.bluetoothmodule.SPEED_CHARACTERISTIC_DATA";
+    public final static String INCLINE_CHARACTERISTIC_DATA =
+            "com.example.bluetoothmodule.INCLINE_CHARACTERISTIC_DATA";
+    public final static String SPORT_TIME_CHARACTERISTIC_DATA =
+            "com.example.bluetoothmodule.SPORT_TIME_CHARACTERISTIC_DATA";
+    public final static String SPORT_DISTANCE_CHARACTERISTIC_DATA =
+            "com.example.bluetoothmodule.SPORT_DISTANCE_CHARACTERISTIC_DATA";
+    public final static String SPORT_CALORIES_CHARACTERISTIC_DATA =
+            "com.example.bluetoothmodule.SPORT_CALORIES_CHARACTERISTIC_DATA";
     
-	private static final int FIRST_BITMASK = 0x01;
+	//private static final int FIRST_BITMASK = 0x01;
 
+    
     public static final UUID CCCD = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     public static final UUID UUID_TREADMILL_SERVICE = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
     public static final UUID RX_CHAR_UUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
@@ -112,19 +118,13 @@ public class TreadmillService extends Service {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-              	//=================
                 List<BluetoothGattService> listGattService;
-            	listGattService = gatt.getServices();   
+            	listGattService = gatt.getServices();  
                 for (BluetoothGattService listService : listGattService) {
                 	if(listService.getUuid().equals(UUID_TREADMILL_SERVICE)) {
-	                	Log.i("Chandler",listService.getUuid().toString());
-	                	broadcastUpdate(ACTION_GATT_SERVICES_HEART_RATE_DISCOVERED);	
-                	} else if(listService.getUuid().equals(UUID_TREADMILL_SERVICE)) {
-	                	Log.i("Chandler",listService.getUuid().toString());
-	                	broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);	
+                		EnableNotification();
                 	}
                 }
-            	//=================
             	Log.w(TAG, "mBluetoothGatt = " + mBluetoothGatt );
                 
             } else {
@@ -137,16 +137,50 @@ public class TreadmillService extends Service {
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+            	if(UUID_UNIT_CHARACTERISTIC.equals(characteristic.getUuid())) {
+            		int Value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            		broadcastUpdate(UNIT_CHARACTERISTIC_DATA, Value);
+            	}
             }
-           
         }
-
+        
+        
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
         	if (TX_CHAR_UUID.equals(characteristic.getUuid())) {
         		broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+        		//Log.w("Chandler", "ACTION_DATA_AVAILABLE : " + characteristic.getValue());
+        	} 
+        	if(UUID_DISPLAY_STATE_CHARACTERISTIC.equals(characteristic.getUuid())) {
+        		int Value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+				//Log.w("Chandler", "DISPLAY_STATE_CHARACTERISTIC_DATA : " + hrValue); 
+				broadcastUpdate(DISPLAY_STATE_CHARACTERISTIC_DATA, Value);
+        	}
+        	
+        	if(UUID_SPEED_CHARACTERISTIC.equals(characteristic.getUuid())) {
+        		int Value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+				broadcastUpdate(SPEED_CHARACTERISTIC_DATA, Value);
+        	}
+        	
+        	if(UUID_INCLINE_CHARACTERISTIC.equals(characteristic.getUuid())) {
+        		int Value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+        		broadcastUpdate(INCLINE_CHARACTERISTIC_DATA, Value);
+        	}
+
+        	if(UUID_SPORT_TIME_CHARACTERISTIC.equals(characteristic.getUuid())) {
+        		int Value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+        		broadcastUpdate(SPORT_TIME_CHARACTERISTIC_DATA, Value);
+        	}
+        	
+        	if(UUID_SPORT_DISTANCE_CHARACTERISTIC.equals(characteristic.getUuid())) {
+        		long Value = byteArrayToLong(characteristic.getValue());
+        		broadcastUpdate(SPORT_DISTANCE_CHARACTERISTIC_DATA, Value);
+        	}
+        	
+        	if(UUID_SPORT_CALORIES_CHARACTERISTIC.equals(characteristic.getUuid())) {
+        		long Value = byteArrayToLong(characteristic.getValue());
+        		broadcastUpdate(SPORT_CALORIES_CHARACTERISTIC_DATA, Value);	
         	}
         }
     };
@@ -163,7 +197,51 @@ public class TreadmillService extends Service {
         intent.putExtra(EXTRA_DATA, characteristic.getValue());
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
+    
+    private void broadcastUpdate(final String action,
+            final int data) {
+    		final Intent intent = new Intent(action);
 
+    		intent.putExtra(EXTRA_DATA, data);
+    		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void broadcastUpdate(final String action,
+            final long data) {
+    		final Intent intent = new Intent(action);
+
+    		intent.putExtra(EXTRA_DATA, data);
+    		LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void EnableNotification() {
+    	new Thread(new Runnable(){
+    	    @Override
+    	    public void run() {
+    	            try{
+    	            	enableTXNotification();
+    	                Thread.sleep(500);
+    	                Enable_DISPLAY_STATE_CHARACTERISTIC_Notification();
+    	                Thread.sleep(500);
+    	                Read_Uint_CHARACTERISTIC_Data();
+    	                Thread.sleep(500);
+    	                Enable_SPEED_CHARACTERISTIC_Notification();
+    	                Thread.sleep(500);
+    	                Enable_INCLINE_CHARACTERISTIC_Notification();
+    	                Thread.sleep(500);
+    	                Enable_SportTime_CHARACTERISTIC_Notification();
+    	                Thread.sleep(500);
+    	                Enable_SportDistance_CHARACTERISTIC_Notification();
+    	                Thread.sleep(500);
+    	                Enable_SporCalories_CHARACTERISTIC_Notification();
+    	            } 
+    	            catch(Exception e){
+    	                e.printStackTrace();
+    	            }
+    	    }            
+    	}).start();
+    }
+    
     public class LocalBinder extends Binder {
     	TreadmillService getService() {
             return TreadmillService.this;
@@ -295,13 +373,13 @@ public class TreadmillService extends Service {
         }
         mBluetoothGatt.readCharacteristic(characteristic);
     }
-    
+
     /**
      * Enable TXNotification
      *
      * @return 
      */
-    public void enableTXNotification() { 
+    private void enableTXNotification() { 
     	BluetoothGattService RxService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
     	if (RxService == null) {
             showMessage("Rx service not found!");
@@ -321,6 +399,125 @@ public class TreadmillService extends Service {
 	        mBluetoothGatt.writeDescriptor(descriptor);
     }
 
+    private void Enable_DISPLAY_STATE_CHARACTERISTIC_Notification() { 
+    	BluetoothGattService TreadmillService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
+    	if (TreadmillService == null) {
+            showMessage("Rx service not found!");
+            //broadcastUpdate(DEVICE_DOES_NOT_SUPPORT_UART);
+            return;
+        }
+    	BluetoothGattCharacteristic Characteristic = TreadmillService.getCharacteristic(UUID_DISPLAY_STATE_CHARACTERISTIC);
+        if (Characteristic == null) {
+            showMessage("DISPLAY STATE charateristic not found!");
+            //broadcastUpdate(DEVICE_DOES_NOT_SUPPORT_UART);
+            return;
+        }
+        	Log.i("Chandler","UUID_DISPLAY_STATE_CHARACTERISTIC");
+	        mBluetoothGatt.setCharacteristicNotification(Characteristic,true);
+	        BluetoothGattDescriptor descriptor = Characteristic.getDescriptor(CCCD);
+	        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+	        mBluetoothGatt.writeDescriptor(descriptor);
+    }    
+    
+    private void Enable_SPEED_CHARACTERISTIC_Notification() { 
+    	BluetoothGattService TreadmillService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
+    	if (TreadmillService == null) {
+            showMessage("TREADMILL_SERVICE service not found!");
+            return;
+        }
+    	BluetoothGattCharacteristic Characteristic = TreadmillService.getCharacteristic(UUID_SPEED_CHARACTERISTIC);
+        if (Characteristic == null) {
+            showMessage("SPEED charateristic not found!");
+            return;
+        }
+	        mBluetoothGatt.setCharacteristicNotification(Characteristic,true);
+	        BluetoothGattDescriptor descriptor = Characteristic.getDescriptor(CCCD);
+	        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+	        mBluetoothGatt.writeDescriptor(descriptor);
+    }
+    
+    private void Read_Uint_CHARACTERISTIC_Data() {
+    	BluetoothGattService TreadmillService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
+    	if (TreadmillService == null) {
+            showMessage("TREADMILL_SERVICE service not found!");
+            return;
+        }
+    	BluetoothGattCharacteristic Characteristic = TreadmillService.getCharacteristic(UUID_UNIT_CHARACTERISTIC);
+        if (Characteristic == null) {
+            showMessage("DISPLAY STATE charateristic not found!");
+            return;
+        }
+        readCharacteristic(Characteristic);
+    }
+
+    private void Enable_INCLINE_CHARACTERISTIC_Notification() {
+    	BluetoothGattService TreadmillService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
+    	if (TreadmillService == null) {
+            showMessage("TREADMILL_SERVICE service not found!");
+            return;
+        }
+    	BluetoothGattCharacteristic Characteristic = TreadmillService.getCharacteristic(UUID_INCLINE_CHARACTERISTIC);
+        if (Characteristic == null) {
+            showMessage("SPEED charateristic not found!");
+            return;
+        }
+	        mBluetoothGatt.setCharacteristicNotification(Characteristic,true);
+	        BluetoothGattDescriptor descriptor = Characteristic.getDescriptor(CCCD);
+	        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+	        mBluetoothGatt.writeDescriptor(descriptor);	
+    }
+
+    private void Enable_SportTime_CHARACTERISTIC_Notification() {
+    	BluetoothGattService TreadmillService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
+    	if (TreadmillService == null) {
+            showMessage("TREADMILL_SERVICE service not found!");
+            return;
+        }
+    	BluetoothGattCharacteristic Characteristic = TreadmillService.getCharacteristic(UUID_SPORT_TIME_CHARACTERISTIC);
+        if (Characteristic == null) {
+            showMessage("SPEED charateristic not found!");
+            return;
+        }
+	        mBluetoothGatt.setCharacteristicNotification(Characteristic,true);
+	        BluetoothGattDescriptor descriptor = Characteristic.getDescriptor(CCCD);
+	        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+	        mBluetoothGatt.writeDescriptor(descriptor);		
+    }
+
+    private void Enable_SportDistance_CHARACTERISTIC_Notification() {
+    	BluetoothGattService TreadmillService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
+    	if (TreadmillService == null) {
+            showMessage("TREADMILL_SERVICE service not found!");
+            return;
+        }
+    	BluetoothGattCharacteristic Characteristic = TreadmillService.getCharacteristic(UUID_SPORT_DISTANCE_CHARACTERISTIC);
+        if (Characteristic == null) {
+            showMessage("SPEED charateristic not found!");
+            return;
+        }
+	        mBluetoothGatt.setCharacteristicNotification(Characteristic,true);
+	        BluetoothGattDescriptor descriptor = Characteristic.getDescriptor(CCCD);
+	        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+	        mBluetoothGatt.writeDescriptor(descriptor);	
+    }
+    
+    private void Enable_SporCalories_CHARACTERISTIC_Notification() {
+    	BluetoothGattService TreadmillService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
+    	if (TreadmillService == null) {
+            showMessage("TREADMILL_SERVICE service not found!");
+            return;
+        }
+    	BluetoothGattCharacteristic Characteristic = TreadmillService.getCharacteristic(UUID_SPORT_CALORIES_CHARACTERISTIC);
+        if (Characteristic == null) {
+            showMessage("SPEED charateristic not found!");
+            return;
+        }
+	        mBluetoothGatt.setCharacteristicNotification(Characteristic,true);
+	        BluetoothGattDescriptor descriptor = Characteristic.getDescriptor(CCCD);
+	        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+	        mBluetoothGatt.writeDescriptor(descriptor);	
+    }
+    
     public void writeRXCharacteristic(byte[] value)
     {
     	BluetoothGattService RxService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
@@ -358,25 +555,17 @@ public class TreadmillService extends Service {
         return mBluetoothGatt.getServices();
     }
     
-    /**
-     * 將4字節的byte數組轉成int值
-     * @param b
-     * @return
-     */
-    public static int byteArray2int(byte[] b){
-    	byte[] a = new byte[4];
-    	int i = a.length - 1,j = b.length - 1;
-    	for (; i >= 0 ; i--,j--) {	//從b的尾部(即int值的低位)開始copy數據
-    		if(j >= 0)
-    			a[i] = b[j];
-    		else
-    			a[i] = 0;//如果b.length不足4,則將高位補0
-    	}
-    	int v0 = (a[0] & 0xff) << 24;//&0xff將byte值無差異轉成int,避免Java自動類型提升後,會保留高位的符號位
-    	int v1 = (a[1] & 0xff) << 16;
-    	int v2 = (a[2] & 0xff) << 8;
-    	int v3 = (a[3] & 0xff) ;
-    	return v0 + v1 + v2 + v3;
+
+    public static long byteArrayToLong(byte[] byteArray) {
+    	long Number = 0;
+    	long NumberInt1,NumberInt2,NumberInt3,NumberInt4;
+    	
+    	NumberInt1 = byteArray [0] & 0xFF;
+    	NumberInt2 = byteArray [1] & 0xFF;
+    	NumberInt3 = byteArray [2] & 0xFF;
+    	NumberInt4 = byteArray [3] & 0xFF;
+    	Number = (NumberInt4 << 24) + (NumberInt3 << 16) + (NumberInt2 << 8) + NumberInt1;
+    	return  Number;  
     }
     
     /**

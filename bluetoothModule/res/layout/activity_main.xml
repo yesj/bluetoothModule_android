@@ -27,6 +27,50 @@
 	            android:onClick="onSelectClicked"
 	            android:text="@string/btn_select_string" />
 	    </LinearLayout>
+	    <LinearLayout
+	        android:id="@+id/linearLayout5"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent"
+	        android:orientation="vertical" >
+
+	        <TextView
+	            android:id="@+id/display_state_views"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"/>
+	        
+	        <TextView
+	            android:id="@+id/unit_views"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"/>
+	        
+	        <TextView
+	            android:id="@+id/speed_views"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"/>
+	        
+	        <TextView
+	            android:id="@+id/incline_views"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"/>
+	        
+	        <TextView
+	            android:id="@+id/sport_time_views"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"/>
+	        
+	        <TextView
+	            android:id="@+id/sport_distance_views"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"/>
+	        
+	        <TextView
+	            android:id="@+id/sport_calories_views"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"/>
+	        
+	    </LinearLayout>
+	    
+	    
 	</LinearLayout> 
 	    
 </FrameLayout>
