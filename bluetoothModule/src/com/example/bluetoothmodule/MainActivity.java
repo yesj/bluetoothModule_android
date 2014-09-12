@@ -39,7 +39,6 @@ public class MainActivity extends Activity {
 	private TextView TVSportTime;
 	private TextView TVSportDistance;
 	private TextView TVSportCalories;
-	private TextView TVHeartRate;
 	
 	/**
 	 * »P  Treadmill Service ³q°T
@@ -136,14 +135,6 @@ public class MainActivity extends Activity {
               });
             }
             //================
-            if (action.equals(TreadmillService.HEART_RATE_CHARACTERISTIC_DATA)){
-            	final int Value = intent.getIntExtra(TreadmillService.EXTRA_DATA, 0);
-           	 	runOnUiThread(new Runnable() {
-                  public void run() {
-                	  TVHeartRate.setText("HeartRate:"+ Value);
-                  }
-              });
-            }
         }
     }; 
     
@@ -175,7 +166,6 @@ public class MainActivity extends Activity {
 		TVSportTime = (TextView) findViewById(R.id.sport_time_views);
 		TVSportDistance = (TextView) findViewById(R.id.sport_distance_views);
 		TVSportCalories = (TextView) findViewById(R.id.sport_calories_views);
-		TVHeartRate = (TextView) findViewById(R.id.heart_rate_views);
 	}
 
     @Override
@@ -248,7 +238,7 @@ public class MainActivity extends Activity {
         intentFilter.addAction(TreadmillService.SPORT_TIME_CHARACTERISTIC_DATA);
         intentFilter.addAction(TreadmillService.SPORT_DISTANCE_CHARACTERISTIC_DATA);
         intentFilter.addAction(TreadmillService.SPORT_CALORIES_CHARACTERISTIC_DATA);
-        intentFilter.addAction(TreadmillService.HEART_RATE_CHARACTERISTIC_DATA);    
+        
         return intentFilter;
     }
 	
