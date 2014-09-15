@@ -75,8 +75,10 @@ public class TreadmillService extends Service {
             "com.example.bluetoothmodule.SPORT_DISTANCE_CHARACTERISTIC_DATA";
     public final static String SPORT_CALORIES_CHARACTERISTIC_DATA =
             "com.example.bluetoothmodule.SPORT_CALORIES_CHARACTERISTIC_DATA";
+    public final static String HEART_RATE_CHARACTERISTIC_DATA =
+            "com.example.bluetoothmodule.HEART_RATE_CHARACTERISTIC_DATA";
     
-	//private static final int FIRST_BITMASK = 0x01;
+	private static final int FIRST_BITMASK = 0x01;
 
     
     public static final UUID CCCD = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
@@ -92,6 +94,8 @@ public class TreadmillService extends Service {
     private static final UUID UUID_SPORT_DISTANCE_CHARACTERISTIC =	UUID.fromString("6e400009-b5a3-f393-e0a9-e50e24dcca9e");
     private static final UUID UUID_SPORT_CALORIES_CHARACTERISTIC =	UUID.fromString("6e40000A-b5a3-f393-e0a9-e50e24dcca9e");
 
+    private final static UUID HR_SERVICE_UUID = UUID.fromString("0000180D-0000-1000-8000-00805f9b34fb");
+    private static final UUID UUID_HR_CHARACTERISTIC = UUID.fromString("00002A37-0000-1000-8000-00805f9b34fb");
     
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -123,6 +127,8 @@ public class TreadmillService extends Service {
                 for (BluetoothGattService listService : listGattService) {
                 	if(listService.getUuid().equals(UUID_TREADMILL_SERVICE)) {
                 		EnableNotification();
+                	} else if(listService.getUuid().equals(HR_SERVICE_UUID)) {
+                		Enable_HeartRate_CHARACTERISTIC_Notification();
                 	}
                 }
             	Log.w(TAG, "mBluetoothGatt = " + mBluetoothGatt );
@@ -182,6 +188,16 @@ public class TreadmillService extends Service {
         		long Value = byteArrayToLong(characteristic.getValue());
         		broadcastUpdate(SPORT_CALORIES_CHARACTERISTIC_DATA, Value);	
         	}
+        	
+        	if(UUID_HR_CHARACTERISTIC.equals(characteristic.getUuid())) {
+        		int Value = 0;
+				if (isHeartRateInUINT16(characteristic.getValue()[0])) {
+					Value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 1);
+				} else {
+					Value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 1);
+				}
+				broadcastUpdate(HEART_RATE_CHARACTERISTIC_DATA, Value);	
+        	}
         }
     };
 
@@ -219,7 +235,7 @@ public class TreadmillService extends Service {
     	    @Override
     	    public void run() {
     	            try{
-    	            	enableTXNotification();
+    	            	//enableTXNotification();
     	                Thread.sleep(500);
     	                Enable_DISPLAY_STATE_CHARACTERISTIC_Notification();
     	                Thread.sleep(500);
@@ -518,6 +534,24 @@ public class TreadmillService extends Service {
 	        mBluetoothGatt.writeDescriptor(descriptor);	
     }
     
+    private void Enable_HeartRate_CHARACTERISTIC_Notification() {
+    	BluetoothGattService TreadmillService = mBluetoothGatt.getService(HR_SERVICE_UUID);
+    	if (TreadmillService == null) {
+            showMessage("HR_SERVICE service not found!");
+            return;
+        }
+    	Log.i("Chandler","Hr_SERVICE_UUID");
+    	BluetoothGattCharacteristic Characteristic = TreadmillService.getCharacteristic(UUID_HR_CHARACTERISTIC);
+        if (Characteristic == null) {
+            showMessage("Hr charateristic not found!");
+            return;
+        }
+	        mBluetoothGatt.setCharacteristicNotification(Characteristic,true);
+	        BluetoothGattDescriptor descriptor = Characteristic.getDescriptor(CCCD);
+	        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+	        mBluetoothGatt.writeDescriptor(descriptor);	
+    }
+    
     public void writeRXCharacteristic(byte[] value)
     {
     	BluetoothGattService RxService = mBluetoothGatt.getService(UUID_TREADMILL_SERVICE);
@@ -582,4 +616,12 @@ public class TreadmillService extends Service {
     	return result;
     }
     
+	/**
+	 * This method will check if Heart rate value is in 8 bits or 16 bits
+	 */
+	private boolean isHeartRateInUINT16(byte value) {
+		if ((value & FIRST_BITMASK) != 0)
+			return true;
+		return false;
+	}
 }
